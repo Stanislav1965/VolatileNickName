@@ -1,29 +1,11 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-
-        // Формируем шаблоны поиска
-        String[] arrayNames3 = {"aaa", "bbb", "ccc", "aba", "aca", "cbc", "aab", "aac"
-                , "abb", "acc", "bcc", "bcc"};
-        List<String> listNames3 = new ArrayList<>(Arrays.asList(arrayNames3));
-
-        String[] arrayNames4 = {"aaaa", "bbbb", "cccc", "abba", "acca", "cbbc", "aaab"
-                , "aaac", "aabb", "aacc", "aaab", "aaac", "bccc", "bbcc", "bbbc"};
-        List<String> listNames4 = new ArrayList<>(Arrays.asList(arrayNames4));
-
-        String[] arrayNames5 = {"aaaaa", "bbbbb", "ccccc", "aabaa", "aacaa", "ccbcc", "aaaab"
-                , "aaaabb", "aabbb", "abbbb", "aaaac", "aaacc", "aaccc", "acccc"
-                , "bbbbc", "bbbcc", "bbccc", "bcccc"};
-        List<String> listNames5 = new ArrayList<>(Arrays.asList(arrayNames5));
-
-        // Создаем классы классы для подсчета имен
-        CounterNickName counter3 = new CounterNickName();
-        CounterNickName counter4 = new CounterNickName();
-        CounterNickName counter5 = new CounterNickName();
+        AtomicInteger counter3 = new AtomicInteger(0);
+        AtomicInteger counter4 = new AtomicInteger(0);
+        AtomicInteger counter5 = new AtomicInteger(0);
 
         //Генерация произволных строк
         Random random = new Random();
@@ -34,15 +16,31 @@ public class Main {
 
         // Создаем три потока для обработки
         Thread thread3 = new Thread(null, () -> {
-            counter3.count(texts, listNames3, 3);
+            for (String text : texts) {
+                if (!isWordOneChar(text)) {
+                    if (isWordPalindrome(text)) {
+                        incrementCounter(text.length(),counter3,counter4,counter5);
+                    }
+                }
+            }
         });
 
         Thread thread4 = new Thread(null, () -> {
-            counter4.count(texts, listNames4, 4);
+            for (String text : texts) {
+                if (isWordOneChar(text)) {
+                    incrementCounter(text.length(),counter3,counter4,counter5);
+                }
+            }
         });
 
         Thread thread5 = new Thread(null, () -> {
-            counter5.count(texts, listNames5, 5);
+            for (String text : texts) {
+                if (!isWordOneChar(text)) {
+                    if (isLettersAscending(text)) {
+                        incrementCounter(text.length(),counter3,counter4,counter5);
+                    }
+                }
+            }
         });
 
         // Стартуем потоки
@@ -55,11 +53,11 @@ public class Main {
         thread4.join();
         thread5.join();
 
-        // Выводим результаты
+        //Выводим результаты
         System.out.println("Результаты подсчета красивых имен");
-        System.out.println("Counter3: " + counter3.getCounter());
-        System.out.println("Counter4: " + counter4.getCounter());
-        System.out.println("Counter5: " + counter5.getCounter());
+        System.out.println("Красивых слов с длиной 3: " + counter3);
+        System.out.println("Красивых слов с длиной 4: " + counter4);
+        System.out.println("Красивых слов с длиной 5: " + counter5);
     }
 
     public static String generateText(String letters, int length) {
@@ -69,5 +67,53 @@ public class Main {
             text.append(letters.charAt(random.nextInt(letters.length())));
         }
         return text.toString();
+    }
+
+    public static boolean isWordPalindrome(String word) {
+        char[] chars = word.toCharArray();
+        int left = 0; // индекс первого символа
+        int right = chars.length - 1; // индекс последнего символа
+        while (left < right) { // пока не дошли до середины слова
+            if (chars[left] != chars[right]) {
+                return false;
+            }
+            left++;
+            right--;
+        }
+        return true;
+    }
+
+    public static boolean isWordOneChar(String word) {
+        char[] chars = word.toCharArray();
+        for (int i = 1; i < chars.length; i++) {
+            if (chars[0] != chars[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isLettersAscending(String word) {
+        char[] chars = word.toCharArray();
+        for (int i = 0; i < chars.length - 1; i++) {
+            if (Character.getNumericValue(chars[i]) > Character.getNumericValue(chars[i + 1])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static void incrementCounter(int length, AtomicInteger counter3, AtomicInteger counter4, AtomicInteger counter5){
+        switch (length) {
+            case 3:
+                counter3.getAndIncrement();
+                break;
+            case 4:
+                counter4.getAndIncrement();
+                break;
+            case 5:
+                counter5.getAndIncrement();
+                break;
+        }
     }
 }
